@@ -4,16 +4,8 @@ import asyncio
 from dbs_assignment.config import settings
 
 import psycopg2
-from psycopg2 import Error
-# from config import config
 
 router = APIRouter()
-
-# @router.get("/v1/status")
-# async def hello():
-#     return {
-#         'hello': settings.POSTGRES_USER
-#     }
 
 @router.get("/v1/status")
 async def connect():
@@ -48,10 +40,6 @@ async def connect():
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
 
-
-
-# if __name__ == '__main__':
-#     print(asyncio.run(connect()))
 
 
 
