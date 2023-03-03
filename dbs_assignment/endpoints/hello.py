@@ -27,7 +27,7 @@ def connect_database():
         print(error)
 
 
-@router.get("/v1/late-departure/{number}")
+@router.get("/v1/flights/late-departure/{number}")
 async def late_departure(number: int):
     conn = connect_database()
     # create a cursor
