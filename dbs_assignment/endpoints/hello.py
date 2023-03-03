@@ -60,7 +60,7 @@ async def late_departure(number: int):
 @router.get("/v1/bookings/{booking_id}")
 async def bookings(booking_id: str):
     conn = connect_database()
-    # create a cursor
+
     cur = conn.cursor()
 
     cur.execute(
