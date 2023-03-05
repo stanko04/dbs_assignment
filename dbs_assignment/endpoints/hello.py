@@ -38,7 +38,7 @@ async def late_departure(number: int):
         'flight_id, '
         'flight_no, '
         '((extract (epoch from ((actual_departure - scheduled_departure)/60))))::integer as delays '
-        'FROM flights WHERE (((extract (epoch from ((actual_departure - scheduled_departure)/60))))::integer) > %s '
+        'FROM bookings.flights WHERE (((extract (epoch from ((actual_departure - scheduled_departure)/60))))::integer) > %s '
         'ORDER BY delays ASC, flight_id ASC ', [number])
     results = cur.fetchall()
 
@@ -78,7 +78,7 @@ async def bookings(booking_id: str):
         'flights.departure_airport, '
         'flights.scheduled_arrival, '
         'flights.scheduled_departure '
-        'FROM bookings '
+        'FROM bookings.bookings '
         'JOIN tickets ON (tickets.book_ref = bookings.book_ref)'
         'JOIN boarding_passes ON (tickets.ticket_no = boarding_passes.ticket_no)'
         'JOIN ticket_flights ON (ticket_flights.ticket_no = tickets.ticket_no)'
@@ -111,7 +111,7 @@ async def arrival_airports(airport: str):
     cur.execute(
         'SELECT '
 	        'DISTINCT arrival_airport '
-        'FROM flights '
+        'FROM bookings.flights '
         'WHERE departure_airport = %s', [airport])
 
     results = cur.fetchall()
