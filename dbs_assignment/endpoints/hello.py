@@ -71,7 +71,7 @@ async def bookings(booking_id: str):
         'tickets.passenger_id, '
         'tickets.passenger_name, '
         'boarding_passes.boarding_no, '
-        'flights.flight_id, '
+        'flights.flight_no, '
         'boarding_passes.seat_no, '
         'flights.aircraft_code, '
         'flights.arrival_airport, '
