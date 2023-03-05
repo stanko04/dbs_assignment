@@ -128,7 +128,6 @@ async def arrival_airports(airport: str):
 async def get_version():
     conn = None
 
-    # connect to the PostgreSQL server
     conn = connect_database()
 
     # create a cursor
