@@ -39,7 +39,7 @@ async def late_departure(number: int):
         'flight_no, '
         '((extract (epoch from ((actual_departure - scheduled_departure)/60))))::integer as delays '
         'FROM bookings.flights WHERE (((extract (epoch from ((actual_departure - scheduled_departure)/60))))::integer) > %s '
-        'ORDER BY delays ASC, flight_id ASC ', [number])
+        'ORDER BY delays ASC, flight_id DESC ', [number])
     results = cur.fetchall()
 
     # cur.close()
@@ -79,10 +79,10 @@ async def bookings(booking_id: str):
         'flights.scheduled_arrival, '
         'flights.scheduled_departure '
         'FROM bookings.bookings '
-        'JOIN tickets ON (tickets.book_ref = bookings.book_ref)'
-        'JOIN boarding_passes ON (tickets.ticket_no = boarding_passes.ticket_no)'
-        'JOIN ticket_flights ON (ticket_flights.ticket_no = tickets.ticket_no)'
-        'JOIN flights ON (ticket_flights.flight_id = flights.flight_id)'
+        'JOIN bookings.tickets ON (tickets.book_ref = bookings.book_ref)'
+        'JOIN bookings.boarding_passes ON (tickets.ticket_no = boarding_passes.ticket_no)'
+        'JOIN bookings.ticket_flights ON (ticket_flights.ticket_no = tickets.ticket_no)'
+        'JOIN bookings.flights ON (ticket_flights.flight_id = flights.flight_id)'
 
         'WHERE tickets.book_ref = %s', [booking_id])
 
