@@ -39,7 +39,7 @@ async def late_departure(number: int):
         'flight_no, '
         '((extract (epoch from ((actual_departure - scheduled_departure)/60))))::integer as delays '
         'FROM bookings.flights WHERE (((extract (epoch from ((actual_departure - scheduled_departure)/60))))::integer) > %s '
-        'ORDER BY delays ASC, flight_id DESC ', [number])
+        'ORDER BY delays DESC, flight_id ASC ', [number])
     results = cur.fetchall()
 
     # cur.close()
