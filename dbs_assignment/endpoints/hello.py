@@ -84,7 +84,8 @@ async def bookings(booking_id: str):
         'JOIN bookings.ticket_flights ON (ticket_flights.ticket_no = tickets.ticket_no)'
         'JOIN bookings.flights ON (ticket_flights.flight_id = flights.flight_id)'
 
-        'WHERE tickets.book_ref = %s', [booking_id])
+        'WHERE tickets.book_ref = %s '
+        'ORDER BY ticket_no ASC, boarding_no ASC', [booking_id])
 
     results = cur.fetchall()
 
