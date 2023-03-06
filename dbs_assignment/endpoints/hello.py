@@ -203,7 +203,7 @@ async def flight_utilization(flight_no: str):
 
     for item in results:
         if(item[3] == 100.0):
-            item[3] = int(item[3])
+            int(item[3])
         data['results'].append({"id": item[0], "aircraft_capacity": item[1],
                                 "load": item[2], "percentage_load": item[3]})
 
