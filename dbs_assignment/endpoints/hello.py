@@ -178,6 +178,35 @@ async def scheduled_flights(airport:str, day:int):
     return data
 
 
+@router.get("/v1/airlines/{flight_no}/load")
+async def flight_utilization(flight_no: str):
+    conn = connect_database()
+    # create a cursor
+    cur = conn.cursor()
+
+    cur.execute(
+        'SELECT '
+            'flights.flight_id, '
+            'COUNT(DISTINCT(seats.seat_no)) as aircraft_capacity, '
+            'COUNT(DISTINCT(ticket_flights.ticket_no)) as "load", '
+            'ROUND(100.0 * (COUNT(DISTINCT(ticket_flights.ticket_no))) / (COUNT(DISTINCT(seats.seat_no))),2) as percentage '
+        'FROM bookings.flights '
+        'JOIN bookings.seats ON(flights.aircraft_code = seats.aircraft_code) '
+        ' JOIN bookings.ticket_flights ON(flights.flight_id = ticket_flights.flight_id) '
+        ' WHERE flight_no = %s '
+        'GROUP BY flights.flight_id '
+        'ORDER BY flights.flight_id ', [flight_no])
+
+    results = cur.fetchall()
+
+    data = {"results": []}
+
+    for item in results:
+        data['results'].append({"id": item[0], "aircraft_capacity": item[1],
+                                "load": item[2], "percentage_load": item[3]})
+
+    return data
+
 
 @router.get("/v1/status")
 async def get_version():
