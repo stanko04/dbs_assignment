@@ -93,7 +93,7 @@ async def bookings(booking_id: str):
     store_list = []
 
     for item in results:
-        data['results']['boarding_passes'].append({"id":item[2], "passenger_id":item[3], "passenger_name":item[4],
+        data['result']['boarding_passes'].append({"id":item[2], "passenger_id":item[3], "passenger_name":item[4],
                                                    "boarding_no":item[5], "flight_no":item[6], "seat":item[7],
                                                    "aircraft_code":item[8], "arrival_airport":item[9],
                                                    "departure_airport": item[10], "scheduled_arrival":item[11],
