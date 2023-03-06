@@ -81,15 +81,14 @@ async def bookings(booking_id: str):
         'FROM bookings.bookings '
         'JOIN bookings.tickets ON (tickets.book_ref = bookings.book_ref)'
         'JOIN bookings.boarding_passes ON (tickets.ticket_no = boarding_passes.ticket_no)'
-        'JOIN bookings.ticket_flights ON (ticket_flights.ticket_no = tickets.ticket_no)'
-        'JOIN bookings.flights ON (ticket_flights.flight_id = flights.flight_id)'
+        'JOIN bookings.flights ON (boarding_passes.flight_id = flights.flight_id)'
 
         'WHERE tickets.book_ref = %s '
         'ORDER BY ticket_no ASC, boarding_no ASC', [booking_id])
 
     results = cur.fetchall()
 
-    data = {"results": {"id": results[0][0], "book_date": results[0][1], "boarding_passes": []}}
+    data = {"result": {"id": results[0][0], "book_date": results[0][1], "boarding_passes": []}}
 
     store_list = []
 
@@ -113,7 +112,8 @@ async def arrival_airports(airport: str):
         'SELECT '
 	        'DISTINCT arrival_airport '
         'FROM bookings.flights '
-        'WHERE departure_airport = %s', [airport])
+        'WHERE departure_airport = %s'
+        'ORDER BY arrival_airport ASC', [airport])
 
     results = cur.fetchall()
 
