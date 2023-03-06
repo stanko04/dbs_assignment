@@ -125,6 +125,33 @@ async def arrival_airports(airport: str):
     return data
 
 
+@router.get("/v1/top-airlines")
+async def most_served_passengers(limit: int):
+    conn = connect_database()
+    # create a cursor
+    cur = conn.cursor()
+
+    cur.execute(
+        'SELECT '
+            'flights.flight_no, '
+            'COUNT(ticket_flights) as counter '
+        'FROM bookings.flights '
+        ' JOIN ticket_flights ON(flights.flight_id = ticket_flights.flight_id) '
+        ' WHERE(flights.flight_id = ticket_flights.flight_id) '
+        ' GROUP BY flight_no '
+        ' ORDER BY counter DESC '
+        ' LIMIT %s', [limit])
+
+    results = cur.fetchall()
+
+    data = {"results": []}
+
+    for item in results:
+        data['results'].append({"flight_no": item[0], "count": item[1]})
+
+    return data
+
+
 @router.get("/v1/status")
 async def get_version():
     conn = None
