@@ -136,7 +136,7 @@ async def most_served_passengers(limit: int):
             'flights.flight_no, '
             'COUNT(ticket_flights) as counter '
         'FROM bookings.flights '
-        ' JOIN ticket_flights ON(flights.flight_id = ticket_flights.flight_id) '
+        ' JOIN bookings.ticket_flights ON(flights.flight_id = ticket_flights.flight_id) '
         ' WHERE(flights.flight_id = ticket_flights.flight_id) '
         ' GROUP BY flight_no '
         ' ORDER BY counter DESC '
