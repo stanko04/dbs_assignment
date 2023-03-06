@@ -165,7 +165,8 @@ async def scheduled_flights(airport:str, day:int):
             ' scheduled_departure '
         ' FROM bookings.flights '
         ' WHERE(flights.status = \'Scheduled\') AND(extract(dow from scheduled_departure) = %s) '
-        ' AND(departure_airport= %s)', [day, airport])
+        ' AND(departure_airport= %s)'
+        ' ORDER BY scheduled_departure, flight_id ASC', [day, airport])
 
     results = cur.fetchall()
 
