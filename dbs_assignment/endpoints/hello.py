@@ -163,7 +163,7 @@ async def scheduled_flights(airport:str, day:int):
             'flight_id, '
             ' flight_no, '
             ' scheduled_departure '
-        ' FROM flights '
+        ' FROM bookings.flights '
         ' WHERE(flights.status = \'Scheduled\') AND(extract(dow from scheduled_departure) = %s) '
         ' AND(departure_airport= %s)', [day, airport])
 
