@@ -48,11 +48,8 @@ async def late_departure(number: int):
 
 
     for item in results:
-        d = collections.OrderedDict()
         # data['results'] = {'flight_id': item[0], 'flight_no': item[1], 'delay': item[2]}
         data['results'].append({'flight_id': item[0], 'flight_no': item[1], 'delay': item[2]})
-
-
 
     return data
 
@@ -150,6 +147,35 @@ async def most_served_passengers(limit: int):
         data['results'].append({"flight_no": item[0], "count": item[1]})
 
     return data
+
+
+@router.get("/v1/departures")
+async def scheduled_flights(airport:str, day:int):
+    if(day == 7):
+        day = 0
+
+    conn = connect_database()
+    # create a cursor
+    cur = conn.cursor()
+
+    cur.execute(
+        'SELECT '
+            'flight_id, '
+            ' flight_no, '
+            ' scheduled_departure '
+        ' FROM flights '
+        ' WHERE(flights.status = \'Scheduled\') AND(extract(dow from scheduled_departure) = %s) '
+        ' AND(departure_airport= %s)', [day, airport])
+
+    results = cur.fetchall()
+
+    data = {"results": []}
+
+    for item in results:
+        data['results'].append({"flight_id": item[0], "flight_no": item[1], "scheduled_departure": item[2]})
+
+    return data
+
 
 
 @router.get("/v1/status")
