@@ -226,21 +226,21 @@ async def week_average(flight_no: str):
         'FROM bookings.flights '
         'JOIN (SELECT flight_id, '
 	            'COUNT(*) as tf_count '
-	            'FROM ticket_flights '
+	            'FROM bookings.ticket_flights '
 	            'GROUP BY flight_id) as tf ON tf.flight_id = flights.flight_id '
         'JOIN(SELECT aircraft_code, '
                 'COUNT(*) as seats_count '
-                'FROM seats GROUP BY aircraft_code) as s ON s.aircraft_code = flights.aircraft_code '
+                'FROM bookings.seats GROUP BY aircraft_code) as s ON s.aircraft_code = flights.aircraft_code '
         'WHERE flights.flight_no = %s '
         'GROUP BY flights.flight_no ', [flight_no])
 
     results = cur.fetchall()
 
-    data = {"results": {}}
+    data = {"result": {}}
 
     for item in results:
-        data['results'] = {"flight_no": item[0], "monday": item[1],
-                                "tuesday": item[2], "wednesday": item[3],
+        data['result'] = {"flight_no": item[0], "monday": item[1],
+                            "tuesday": item[2], "wednesday": item[3],
                            "thursday": item[4], "friday": item[5], "saturday": item[6], "sunday": item[7]}
 
     return data
