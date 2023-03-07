@@ -207,6 +207,48 @@ async def flight_utilization(flight_no: str):
 
     return data
 
+@router.get("/v1/airlines/{flight_no}/load-week")
+async def week_average(flight_no: str):
+    conn = connect_database()
+    # create a cursor
+    cur = conn.cursor()
+
+    cur.execute(
+        'SELECT '
+            'flights.flight_no, '
+            'ROUND(AVG(CASE WHEN EXTRACT(dow FROM flights.scheduled_departure) = 1 THEN tf_count * 100.0 / seats_count END),2) as monday, '
+            'ROUND(AVG(CASE WHEN EXTRACT(dow FROM flights.scheduled_departure) = 2 THEN tf_count * 100.0 / seats_count END),2) as tuesday, '
+            'ROUND(AVG(CASE WHEN EXTRACT(dow FROM flights.scheduled_departure) = 3 THEN tf_count * 100.0 / seats_count END),2) as wednesday, '
+            'ROUND(AVG(CASE WHEN EXTRACT(dow FROM flights.scheduled_departure) = 4 THEN tf_count * 100.0 / seats_count END),2) as thursday, '
+            'ROUND(AVG(CASE WHEN EXTRACT(dow FROM flights.scheduled_departure) = 5 THEN tf_count * 100.0 / seats_count END),2) as friday, '
+            'ROUND(AVG(CASE WHEN EXTRACT(dow FROM flights.scheduled_departure) = 6 THEN tf_count * 100.0 / seats_count END),2) as saturday, '
+            'ROUND(AVG(CASE WHEN EXTRACT(dow FROM flights.scheduled_departure) = 0 THEN tf_count * 100.0 / seats_count END),2) as sunday '
+        'FROM bookings.flights '
+        'JOIN (SELECT flight_id, '
+	            'COUNT(*) as tf_count '
+	            'FROM ticket_flights '
+	            'GROUP BY flight_id) as tf ON tf.flight_id = flights.flight_id '
+        'JOIN(SELECT aircraft_code, '
+                'COUNT(*) as seats_count '
+                'FROM seats GROUP BY aircraft_code) as s ON s.aircraft_code = flights.aircraft_code '
+        'WHERE flights.flight_no = %s '
+        'GROUP BY flights.flight_no ', [flight_no])
+
+    results = cur.fetchall()
+
+    data = {"results": {}}
+
+    for item in results:
+        data['results'] = {"flight_no": item[0], "monday": item[1],
+                                "tuesday": item[2], "wednesday": item[3],
+                           "thursday": item[4], "friday": item[5], "saturday": item[6], "sunday": item[7]}
+
+    return data
+
+
+
+
+
 
 @router.get("/v1/status")
 async def get_version():
