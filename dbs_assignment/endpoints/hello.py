@@ -50,6 +50,20 @@ async def get_companions(passenger_id: str):
         'GROUP BY t.passenger_id, t.passenger_name '
         'ORDER BY flights_count DESC, t.passenger_id ASC, flights ASC ', [passenger_id] )
 
+    results = cur.fetchall()
+
+    # cur.close()
+
+    data = {"results": []}
+
+    for item in results:
+        data['results'].append({"id": item[0], "name": item[1], "flights_count": item[2],
+                                "flights": item[3]})
+
+    return data
+
+
+
 
 @router.get("/v1/flights/late-departure/{number}")
 async def late_departure(number: int):
