@@ -40,7 +40,7 @@ async def get_companions(passenger_id: str):
         'COUNT(DISTINCT first_boarding_passes.flight_id) as flights_count, '
         'ARRAY_AGG(DISTINCT first_boarding_passes.flight_id ORDER BY first_boarding_passes.flight_id ASC) as flights '
         'FROM bookings.tickets t '
-        'JOIN boarding_passes first_boarding_passes ON t.ticket_no = first_boarding_passes.ticket_no '
+        'JOIN bookings.boarding_passes first_boarding_passes ON t.ticket_no = first_boarding_passes.ticket_no '
         'JOIN (SELECT DISTINCT flight_id '
                'FROM bookings.boarding_passes '
                'WHERE ticket_no IN (SELECT ticket_no '
