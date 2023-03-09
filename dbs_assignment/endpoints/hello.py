@@ -27,6 +27,30 @@ def connect_database():
         print(error)
 
 
+@router.get("/v1/passengers/{passenger_id}/companions")
+async def get_companions(passenger_id: str):
+    conn = connect_database()
+    # create a cursor
+    cur = conn.cursor()
+
+    cur.execute(
+        'SELECT '
+        't.passenger_id, '
+        't.passenger_name, '
+        'COUNT(DISTINCT first_boarding_passes.flight_id) as flights_count, '
+        'ARRAY_AGG(DISTINCT first_boarding_passes.flight_id ORDER BY first_boarding_passes.flight_id ASC) as flights '
+        'FROM bookings.tickets t '
+        'JOIN boarding_passes first_boarding_passes ON t.ticket_no = first_boarding_passes.ticket_no '
+        'JOIN (SELECT DISTINCT flight_id '
+               'FROM bookings.boarding_passes '
+               'WHERE ticket_no IN (SELECT ticket_no '
+                                    'FROM bookings.tickets '
+                                    'WHERE passenger_id = %s )) '
+        'AS second_boarding_passes ON first_boarding_passes.flight_id = second_boarding_passes.flight_id '
+        'GROUP BY t.passenger_id, t.passenger_name '
+        'ORDER BY flights_count DESC, t.passenger_id ASC, flights ASC ' )
+
+
 @router.get("/v1/flights/late-departure/{number}")
 async def late_departure(number: int):
     conn = connect_database()
@@ -244,10 +268,6 @@ async def week_average(flight_no: str):
                            "thursday": item[4], "friday": item[5], "saturday": item[6], "sunday": item[7]}
 
     return data
-
-
-
-
 
 
 @router.get("/v1/status")
