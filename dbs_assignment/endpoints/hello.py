@@ -48,7 +48,7 @@ async def get_companions(passenger_id: str):
                                     'WHERE passenger_id = %s )) '
         'AS second_boarding_passes ON first_boarding_passes.flight_id = second_boarding_passes.flight_id '
         'GROUP BY t.passenger_id, t.passenger_name '
-        'ORDER BY flights_count DESC, t.passenger_id ASC, flights ASC ' )
+        'ORDER BY flights_count DESC, t.passenger_id ASC, flights ASC ', [passenger_id] )
 
 
 @router.get("/v1/flights/late-departure/{number}")
