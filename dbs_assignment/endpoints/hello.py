@@ -47,12 +47,13 @@ async def get_companions(passenger_id: str):
                                     'FROM bookings.tickets '
                                     'WHERE passenger_id = %s )) '
         'AS second_boarding_passes ON first_boarding_passes.flight_id = second_boarding_passes.flight_id '
+        'WHERE t.passenger_id != %s '
         'GROUP BY t.passenger_id, t.passenger_name '
-        'ORDER BY flights_count DESC, t.passenger_id ASC, flights ASC ', [passenger_id] )
+        'ORDER BY flights_count DESC, t.passenger_id ASC, flights ASC ', [passenger_id, passenger_id] )
 
     results = cur.fetchall()
 
-    # cur.close()
+    cur.close()
 
     data = {"results": []}
 
