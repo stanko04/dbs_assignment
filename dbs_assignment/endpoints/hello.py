@@ -1,6 +1,4 @@
-import collections
-import json
-
+from decimal import *
 from fastapi import APIRouter
 
 from dbs_assignment.config import settings
@@ -37,16 +35,15 @@ async def get_companions(passenger_id: str):
         'SELECT '
         't.passenger_id, '
         't.passenger_name, '
-        'COUNT(DISTINCT first_boarding_passes.flight_id) as flights_count, '
-        'ARRAY_AGG(DISTINCT first_boarding_passes.flight_id ORDER BY first_boarding_passes.flight_id ASC) as flights '
+        'COUNT(DISTINCT second_boarding_passes.flight_id) as flights_count, '
+        'ARRAY_AGG(DISTINCT second_boarding_passes.flight_id ORDER BY second_boarding_passes.flight_id ASC) as flights '
         'FROM bookings.tickets t '
         'JOIN bookings.boarding_passes first_boarding_passes ON t.ticket_no = first_boarding_passes.ticket_no '
         'JOIN (SELECT DISTINCT flight_id '
-               'FROM bookings.boarding_passes '
-               'WHERE ticket_no IN (SELECT ticket_no '
-                                    'FROM bookings.tickets '
-                                    'WHERE passenger_id = %s )) '
-        'AS second_boarding_passes ON first_boarding_passes.flight_id = second_boarding_passes.flight_id '
+	           'FROM bookings.boarding_passes bp '
+	           'JOIN bookings.tickets t ON t.ticket_no = bp.ticket_no '
+	           'WHERE t.passenger_id = %s) '
+        'as second_boarding_passes ON first_boarding_passes.flight_id = second_boarding_passes.flight_id '
         'WHERE t.passenger_id != %s '
         'GROUP BY t.passenger_id, t.passenger_name '
         'ORDER BY flights_count DESC, t.passenger_id ASC, flights ASC ', [passenger_id, passenger_id] )
@@ -62,8 +59,6 @@ async def get_companions(passenger_id: str):
                                 "flights": item[3]})
 
     return data
-
-
 
 
 @router.get("/v1/flights/late-departure/{number}")
@@ -242,7 +237,7 @@ async def flight_utilization(flight_no: str):
 
     for item in results:
         data['results'].append({"id": item[0], "aircraft_capacity": item[1],
-                                "load": item[2], "percentage_load": item[3]})
+                                "load": item[2], "percentage_load": Decimal(item[3]).normalize()})
 
     return data
 
