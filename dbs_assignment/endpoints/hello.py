@@ -25,6 +25,94 @@ def connect_database():
         print(error)
 
 
+# Zadanie 3
+
+@router.get("/v3/air-time/{book_ref}")
+def time_flight(book_ref: str):
+    conn = connect_database()
+    # create a cursor
+    cur = conn.cursor()
+
+    cur.execute(
+        'SELECT '
+	        'tickets.ticket_no, '
+	        'tickets.passenger_name, '
+	        'array_agg(array[f.departure_airport, f.arrival_airport, f.flight_time, f.cumulative_flight_time] ORDER BY f.actual_departure) '
+        'FROM bookings.tickets '
+        'JOIN ( '
+            'SELECT '
+	        'passenger_name, '
+	        'tickets.ticket_no, '
+	        'ticket_flights.flight_id, '
+	        'departure_airport, '
+	        'arrival_airport, '
+	        'actual_departure, '
+	        '(concat((EXTRACT(EPOCH FROM actual_arrival - actual_departure)/60),\'minutes\')::interval)::varchar as flight_time, '
+	        '(concat((sum(EXTRACT(EPOCH FROM actual_arrival - actual_departure)/60) OVER (PARTITION BY passenger_name ORDER BY actual_departure)), \'minutes\')::interval)::varchar as cumulative_flight_time '
+            'FROM bookings.tickets '
+	        'JOIN bookings.ticket_flights on (tickets.ticket_no = ticket_flights.ticket_no) '
+	        'JOIN bookings.flights on (ticket_flights.flight_id = flights.flight_id) '
+	        'WHERE book_ref = %s '
+	        'GROUP BY tickets.ticket_no, passenger_name, ticket_flights.flight_id, flights.departure_airport, flights.arrival_airport, flights.actual_departure, flights.actual_arrival '
+        ') as f ON f.ticket_no = tickets.ticket_no '
+        'WHERE book_ref = %s '
+        ' GROUP BY tickets.ticket_no '
+        ' ORDER by ticket_no ', [book_ref, book_ref])
+
+    results = cur.fetchall()
+
+    cur.close()
+
+    data = {"results": []}
+
+    for item in results:
+        result_data = {"ticket_no": item[0], "passenger_name": item[1], "flights": []}
+        for element in item[2]:
+            result_data["flights"].append({"departure_airport": element[0], "arrival_airport": element[1],
+                                           "flight_time": element[2], "total_time": element[3]})
+
+        data["results"].append(result_data)
+
+    return data
+
+@router.get("/v3/aircrafts/{aircraft_code}/top-incomes")
+def top_incomes(aircraft_code: str):
+    conn = connect_database()
+    # create a cursor
+    cur = conn.cursor()
+
+    cur.execute(
+        'SELECT sum_amount::Integer as \"amount\", to_char(\"date\", \'YYYY-MM\') as "\month\", num_day '
+        'FROM( '
+            'SELECT '
+                'DATE_TRUNC(\'month\', actual_departure) as \"date\", '
+                'DATE_TRUNC(\'day\', actual_departure) as \"day\", '
+                'sum(amount) as sum_amount, '
+                'extract(day from actual_departure) as \"num_day\", '
+                'RANK() OVER(PARTITION BY DATE_TRUNC(\'month\', actual_departure) ORDER BY SUM(amount) DESC) as rank '
+            'FROM ticket_flights '
+            'JOIN flights ON(flights.flight_id = ticket_flights.flight_id) '
+            'WHERE aircraft_code = %s AND flights.actual_departure IS NOT NULL '
+            'GROUP BY \"date\", \"day\", \"num_day\" ) sub '
+    'WHERE rank = 1 '
+    'ORDER BY sum_amount DESC ', [aircraft_code])
+
+    results = cur.fetchall()
+
+    cur.close()
+
+    data = {"results": []}
+
+    for item in results:
+        data["results"].append({"total_amount": item[0], "month": item[1], "day": item[2]})
+
+    return data
+
+
+
+
+# Zadanie 2
+
 @router.get("/v1/passengers/{passenger_id}/companions")
 async def get_companions(passenger_id: str):
     conn = connect_database()
@@ -279,6 +367,8 @@ async def week_average(flight_no: str):
 
     return data
 
+
+# Zadanie 1
 
 @router.get("/v1/status")
 async def get_version():
