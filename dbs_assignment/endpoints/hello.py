@@ -108,6 +108,10 @@ def top_incomes(aircraft_code: str):
 
     return data
 
+@router.get('/v3/airlines/{flight_no}/top_seats')
+def top_seats(flight_no: str, limit: int):
+    data = {"results": []}
+    return data
 
 
 
