@@ -62,8 +62,6 @@ def seat_choices(aircraft_code: str, seat_choice:int):
 
     return data
 
-
-
 @router.get("/v3/air-time/{book_ref}")
 def time_flight(book_ref: str):
     conn = connect_database()
@@ -114,9 +112,44 @@ def time_flight(book_ref: str):
 
 @router.get('/v3/airlines/{flight_no}/top_seats')
 def top_seats(flight_no: str, limit: int):
-    data = {"results": []}
-    return data
+    conn = connect_database()
+    # create a cursor
+    cur = conn.cursor()
 
+    cur.execute(
+        'SELECT '
+            'sub.seat_no, '
+            'COUNT(sub.flight_id) as "count", '
+            'array_agg(sub.flight_id ORDER BY flight_id), '
+            'sub.sequence_identifier '
+        'FROM( '
+            'SELECT '
+                'seat_no, '
+                'boarding_passes.flight_id as flight_id, '
+                'DENSE_RANK() OVER(ORDER BY seat_no, boarding_passes.flight_id) as dense_rank_result, '
+                'boarding_passes.flight_id - RANK() OVER(ORDER BY seat_no, boarding_passes.flight_id) as sequence_identifier '
+            'FROM bookings.boarding_passes '
+            'JOIN bookings.flights ON(flights.flight_id = boarding_passes.flight_id) '
+            'WHERE flight_no = %s ) AS sub '
+        'GROUP BY sub.sequence_identifier, sub.seat_no '
+        'ORDER BY \"count\" '
+        'DESC, sub.seat_no '
+        'LIMIT %s ', [flight_no, limit])
+
+    results = cur.fetchall()
+
+    cur.close()
+
+    data = {"results": []}
+
+    for item in results:
+        results_data = {"seat": item[0], "flights_count": item[1], "flights": []}
+        for element in item[2]:
+            results_data["flights"].append(element)
+
+        data["results"].append(results_data)
+
+    return data
 
 @router.get("/v3/aircrafts/{aircraft_code}/top-incomes")
 def top_incomes(aircraft_code: str):
@@ -125,7 +158,7 @@ def top_incomes(aircraft_code: str):
     cur = conn.cursor()
 
     cur.execute(
-        'SELECT sum_amount::Integer as \"amount\", to_char(\"date\", \'YYYY-MM\') as "\month\", num_day '
+        'SELECT sum_amount::Integer as \"amount\", to_char(\"date\", \'YYYY-MM\') as "\month\", num_day::varchar '
         'FROM( '
             'SELECT '
                 'DATE_TRUNC(\'month\', actual_departure) as \"date\", '
