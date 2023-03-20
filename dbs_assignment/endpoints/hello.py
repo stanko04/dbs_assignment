@@ -26,6 +26,43 @@ def connect_database():
 
 
 # Zadanie 3
+@router.get("/v3/aircrafts/{aircraft_code}/seats/{seat_choice}")
+def seat_choices(aircraft_code: str, seat_choice:int):
+    conn = connect_database()
+    # create a cursor
+    cur = conn.cursor()
+
+    cur.execute(
+        'SELECT '
+            'sub.seat_no, '
+            'COUNT(sub.seat_no) as \"count\" '
+    'FROM( '
+        'SELECT '
+            'seat_no, '
+            'DENSE_RANK() OVER(PARTITION BY flights.flight_id ORDER BY bookings.book_date) as \"rank\" '
+        'FROM bookings.boarding_passes '
+        'JOIN bookings.tickets ON(boarding_passes.ticket_no = tickets.ticket_no) '
+        'JOIN bookings.flights ON(boarding_passes.flight_id = flights.flight_id) '
+        'JOIN bookings.bookings ON(tickets.book_ref = bookings.book_ref) '
+        'WHERE aircraft_code = %s ) AS sub '
+        'WHERE sub."rank" = %s '
+        'GROUP BY sub.seat_no '
+        'ORDER BY "count" DESC '
+        'LIMIT 1 ', [aircraft_code, seat_choice])
+
+    results = cur.fetchall()
+
+    cur.close()
+
+    # data = {"results": ["seat"]}
+
+    # for item in results:
+        # data["results"] = {"seat": item[0], "count": item[1]})
+    data = {"results": {"seat": results[0][0], "count": results[0][1]}}
+
+    return data
+
+
 
 @router.get("/v3/air-time/{book_ref}")
 def time_flight(book_ref: str):
@@ -75,6 +112,12 @@ def time_flight(book_ref: str):
 
     return data
 
+@router.get('/v3/airlines/{flight_no}/top_seats')
+def top_seats(flight_no: str, limit: int):
+    data = {"results": []}
+    return data
+
+
 @router.get("/v3/aircrafts/{aircraft_code}/top-incomes")
 def top_incomes(aircraft_code: str):
     conn = connect_database()
@@ -108,10 +151,6 @@ def top_incomes(aircraft_code: str):
 
     return data
 
-@router.get('/v3/airlines/{flight_no}/top_seats')
-def top_seats(flight_no: str, limit: int):
-    data = {"results": []}
-    return data
 
 
 
