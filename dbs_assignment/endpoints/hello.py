@@ -58,7 +58,7 @@ def seat_choices(aircraft_code: str, seat_choice:int):
 
     # for item in results:
         # data["results"] = {"seat": item[0], "count": item[1]})
-    data = {"results": {"seat": results[0][0], "count": results[0][1]}}
+    data = {"result": {"seat": results[0][0], "count": results[0][1]}}
 
     return data
 
@@ -158,7 +158,7 @@ def top_incomes(aircraft_code: str):
     cur = conn.cursor()
 
     cur.execute(
-        'SELECT sum_amount::Integer as \"amount\", to_char(\"date\", \'YYYY-MM\') as "\month\", num_day::varchar '
+        'SELECT sum_amount::Integer as \"amount\", to_char(\"date\", \'YYYY-FMMM\') as "\month\", num_day::varchar '
         'FROM( '
             'SELECT '
                 'DATE_TRUNC(\'month\', actual_departure) as \"date\", '
@@ -445,7 +445,6 @@ async def week_average(flight_no: str):
 
 
 # Zadanie 1
-
 @router.get("/v1/status")
 async def get_version():
     conn = None
