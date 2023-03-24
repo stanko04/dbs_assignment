@@ -62,6 +62,7 @@ def seat_choices(aircraft_code: str, seat_choice:int):
 
     return data
 
+
 @router.get("/v3/air-time/{book_ref}")
 def time_flight(book_ref: str):
     conn = connect_database()
@@ -82,7 +83,8 @@ def time_flight(book_ref: str):
 	        'departure_airport, '
 	        'arrival_airport, '
 	        'actual_departure, '
-	        '(concat((EXTRACT(EPOCH FROM actual_arrival - actual_departure)/60),\'minutes\')::interval)::varchar as flight_time, '
+            'to_char((flights.actual_arrival - flights.actual_departure)::time, \'FMHH24:MI:SS\') AS flight_time, '
+	        # '(concat((EXTRACT(EPOCH FROM actual_arrival - actual_departure)/60),\'minutes\')::interval)::varchar as flight_time, '
 	        '(concat((sum(EXTRACT(EPOCH FROM actual_arrival - actual_departure)/60) OVER (PARTITION BY passenger_name ORDER BY actual_departure)), \'minutes\')::interval)::varchar as cumulative_flight_time '
             'FROM bookings.tickets '
 	        'JOIN bookings.ticket_flights on (tickets.ticket_no = ticket_flights.ticket_no) '
@@ -109,6 +111,7 @@ def time_flight(book_ref: str):
         data["results"].append(result_data)
 
     return data
+
 
 @router.get('/v3/airlines/{flight_no}/top_seats')
 def top_seats(flight_no: str, limit: int):
@@ -150,6 +153,7 @@ def top_seats(flight_no: str, limit: int):
         data["results"].append(results_data)
 
     return data
+
 
 @router.get("/v3/aircrafts/{aircraft_code}/top-incomes")
 def top_incomes(aircraft_code: str):
@@ -404,6 +408,7 @@ async def flight_utilization(flight_no: str):
                                 "load": item[2], "percentage_load": Decimal(item[3]).normalize()})
 
     return data
+
 
 @router.get("/v1/airlines/{flight_no}/load-week")
 async def week_average(flight_no: str):
