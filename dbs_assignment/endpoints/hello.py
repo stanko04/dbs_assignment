@@ -54,10 +54,6 @@ def seat_choices(aircraft_code: str, seat_choice:int):
 
     cur.close()
 
-    # data = {"results": ["seat"]}
-
-    # for item in results:
-        # data["results"] = {"seat": item[0], "count": item[1]})
     data = {"result": {"seat": results[0][0], "count": results[0][1]}}
 
     return data
@@ -85,14 +81,12 @@ def time_flight(book_ref: str):
 	        'actual_departure, '
             'to_char((flights.actual_arrival - flights.actual_departure)::time, \'FMHH24:MI:SS\') AS flight_time, '
             'to_char((sum(flights.actual_arrival - flights.actual_departure) OVER (PARTITION BY passenger_name ORDER BY actual_departure)), \'FMHH24:MI:SS\')  as cumulative_flight_time '
-	        # '(concat((EXTRACT(EPOCH FROM actual_arrival - actual_departure)/60),\'minutes\')::interval)::varchar as flight_time, '
-	        # '(concat((sum(EXTRACT(EPOCH FROM actual_arrival - actual_departure)/60) OVER (PARTITION BY passenger_name ORDER BY actual_departure)), \'minutes\')::interval)::varchar as cumulative_flight_time '
             'FROM bookings.tickets '
 	        'JOIN bookings.ticket_flights on (tickets.ticket_no = ticket_flights.ticket_no) '
 	        'JOIN bookings.flights on (ticket_flights.flight_id = flights.flight_id) '
 	        'WHERE book_ref = %s '
 	        'GROUP BY tickets.ticket_no, passenger_name, ticket_flights.flight_id, flights.departure_airport, flights.arrival_airport, flights.actual_departure, flights.actual_arrival '
-        ') as f ON f.ticket_no = tickets.ticket_no '
+        ') AS f ON f.ticket_no = tickets.ticket_no '
         'WHERE book_ref = %s '
         ' GROUP BY tickets.ticket_no '
         ' ORDER by ticket_no ', [book_ref, book_ref])
@@ -124,14 +118,13 @@ def top_seats(flight_no: str, limit: int):
         'SELECT '
             'sub.seat_no, '
             'COUNT(sub.flight_id) as "count", '
-            'array_agg(sub.flight_id ORDER BY flight_id), '
-            'sub.sequence_identifier '
+            'array_agg(sub.flight_id ORDER BY flight_id) '
         'FROM( '
             'SELECT '
                 'seat_no, '
                 'boarding_passes.flight_id as flight_id, '
                 'DENSE_RANK() OVER(ORDER BY seat_no, boarding_passes.flight_id) as dense_rank_result, '
-                'boarding_passes.flight_id - RANK() OVER(ORDER BY seat_no, boarding_passes.flight_id) as sequence_identifier '
+                'boarding_passes.flight_id - DENSE_RANK() OVER(ORDER BY seat_no, boarding_passes.flight_id) as sequence_identifier '
             'FROM bookings.boarding_passes '
             'JOIN bookings.flights ON(flights.flight_id = boarding_passes.flight_id) '
             'WHERE flight_no = %s ) AS sub '
